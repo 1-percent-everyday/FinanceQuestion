@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Profile Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --cream: #FAF8F3;
+    --tusk: #EDE9DE;
+    --tusk-dark: #D5CFBF;
+    --gold: #B8965A;
+    --gold-light: #D4AF72;
+    --brown: #5C4A2A;
+    --brown-light: #7A6240;
+    --text: #2C2416;
+    --text-muted: #7A6E5F;
+    --white: #FFFFFF;
+    --border: #D5CFBF;
+    --shadow: rgba(92,74,42,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--brown);
+    padding: 2rem 2.5rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: 40%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='50' fill='none' stroke='%23D4AF72' stroke-width='0.5' opacity='0.3'/%3E%3Ccircle cx='60' cy='60' r='35' fill='none' stroke='%23D4AF72' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='60' cy='60' r='20' fill='none' stroke='%23D4AF72' stroke-width='0.5' opacity='0.15'/%3E%3C/svg%3E") repeat;
+    opacity: 0.4;
+  }
+  .header-inner { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(212,175,114,0.2);
+    border: 1px solid rgba(212,175,114,0.4);
+    color: var(--gold-light);
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 0.75rem;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 600;
+    color: #FAF8F3; line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .header p {
+    color: rgba(250,248,243,0.65); font-size: 13px; font-weight: 300;
+  }
+
+  /* STICKERS */
+  .stickers-bar {
+    background: var(--tusk);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 2.5rem;
+    display: flex; align-items: center; gap: 10px;
+    overflow-x: auto;
+  }
+  .sticker {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 11px; color: var(--brown-light);
+    white-space: nowrap; font-weight: 500;
+  }
+
+  /* MAIN */
+  main { max-width: 800px; margin: 0 auto; padding: 2rem 2.5rem 2rem; }
+
+  /* SECTION HEADER */
+  .section-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500; margin-bottom: 1.25rem;
+    margin-top: 2.25rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--tusk-dark);
+  }
+
+  /* QUESTION CARD */
+  .q-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .q-card:hover { box-shadow: 0 4px 20px var(--shadow); }
+  .q-header { padding: 1rem 1.25rem 0.5rem; }
+  .q-label-row { display: flex; align-items: center; gap: 8px; }
+  .q-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--tusk); color: var(--brown-light);
+    font-size: 11px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .q-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 400; color: var(--text);
+  }
+  .q-mark {
+    color: var(--gold); font-size: 16px; font-weight: 600; flex-shrink: 0;
+  }
+  .q-desc-panel {
+    padding: 0 1.25rem 0.75rem 3.25rem;
+  }
+  .q-desc-text {
+    font-size: 12px; color: var(--text-muted);
+    background: var(--tusk);
+    border-left: 3px solid var(--gold-light);
+    padding: 8px 12px; border-radius: 0 8px 8px 0;
+    line-height: 1.6;
+  }
+  .q-body { padding: 0 1.25rem 1rem 1.25rem; }
+
+  /* INPUTS */
+  .input-num {
+    width: 100%;
+    background: var(--tusk); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .input-num:focus { border-color: var(--gold); background: var(--white); }
+  .input-num::placeholder { color: var(--text-muted); }
+
+  .options-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .opt-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    background: var(--tusk); transition: all 0.15s;
+    font-size: 13px; color: var(--text);
+    user-select: none;
+  }
+  .opt-btn:hover { border-color: var(--gold-light); background: #F5EFE4; }
+  .opt-btn.selected {
+    background: #F5EFE4; border-color: var(--gold);
+    color: var(--brown);
+  }
+  .opt-dot, .opt-sq {
+    width: 16px; height: 16px; border: 1.5px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .opt-dot { border-radius: 50%; }
+  .opt-sq { border-radius: 4px; }
+  .opt-btn.selected .opt-dot, .opt-btn.selected .opt-sq { border-color: var(--gold); background: var(--gold); }
+  
+  .opt-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--white); display: none; }
+  .opt-btn.selected .opt-dot::after { display: block; }
+  
+  .opt-sq::after { content: '✓'; color: var(--white); font-size: 10px; display: none; }
+  .opt-btn.selected .opt-sq::after { display: block; }
+
+  /* EXPLANATION TEXTAREA */
+  .explanation-wrap { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; }
+  .explanation-label { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+  .explanation-label span { opacity: 0.7; font-style: italic; }
+  textarea.input-expl {
+    width: 100%; background: var(--tusk); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+    resize: vertical; min-height: 60px; outline: none;
+  }
+  textarea.input-expl:focus { border-color: var(--gold); background: var(--white); }
+
+  /* OUTPUT BOX */
+  #outputBox {
+    display: none;
+    max-width: 800px;
+    margin: 0 auto 4rem auto;
+    padding: 0 2.5rem;
+  }
+  .output-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .output-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; color: var(--text);
+  }
+  .btn-copy {
+    background: var(--brown); color: var(--white);
+    border: none; padding: 8px 16px; border-radius: 6px;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    font-weight: 500; transition: background 0.2s;
+  }
+  .btn-copy:hover { background: var(--gold); }
+  pre#resultText {
+    background: #1e1b18; color: #f0e9df; padding: 1.5rem;
+    border-radius: 10px; overflow-x: auto; font-family: monospace;
+    font-size: 13px; line-height: 1.5; white-space: pre-wrap;
+    border: 1px solid var(--gold);
+  }
+
+  /* EXPORT TOOLBAR */
+  .toolbar {
+    position: sticky; bottom: 0; background: var(--brown);
+    border-top: 1px solid rgba(255,255,255,0.1); padding: 1rem 2.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 100;
+  }
+  .toolbar-left { font-size: 12px; color: rgba(250,248,243,0.6); }
+  .toolbar-btns { display: flex; gap: 8px; }
+  .btn-export {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: 8px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    transition: all 0.15s; border: none;
+  }
+  .btn-pdf { background: var(--gold); color: var(--brown); }
+  .btn-pdf:hover { background: var(--gold-light); }
+  .btn-text { background: transparent; color: var(--gold-light); border: 1px solid rgba(212,175,114,0.4); }
+  .btn-text:hover { background: rgba(212,175,114,0.1); }
+
+  /* PROGRESS */
+  .progress-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 4px; height: 3px; flex: 1; max-width: 200px; }
+  .progress-bar-fill { height: 100%; background: var(--gold-light); border-radius: 4px; transition: width 0.3s; }
+  .progress-text { font-size: 11px; color: rgba(250,248,243,0.5); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--brown); color: var(--tusk); padding: 10px 20px; border-radius: 10px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    main, #outputBox { padding: 1.25rem 1rem 2rem; }
+    .toolbar { padding: 0.75rem 1rem; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#D4AF72"/></svg>
+      Financial Profile Form
+    </div>
+    <h1>Personal Financial<br>Questionnaire</h1>
+    <p>Complete each section to generate your financial profile document.</p>
+  </div>
+</div>
+
+<div class="stickers-bar">
+  <div class="sticker">💰 Wealth Planning</div>
+  <div class="sticker">📊 Risk Profile</div>
+  <div class="sticker">🏦 Asset Mapping</div>
+  <div class="sticker">🎯 Investment Goals</div>
+  <div class="sticker">🛡️ Insurance Review</div>
+  <div class="sticker">📅 Life Events</div>
+  <div class="sticker">🌱 Legacy Planning</div>
+</div>
+
+<main id="form-main">
+  </main>
+
+<div id="outputBox">
+  <div class="output-header">
+    <h3>Copy this for your AI</h3>
+    <button onclick="copyOutput()" class="btn-copy">📋 Copy Text</button>
+  </div>
+  <pre id="resultText"></pre>
+</div>
+
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="toolbar-left">
+      <div id="progress-text" class="progress-text">0 of 17 answered</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+  <div class="toolbar-btns">
+    <button class="btn-export btn-text" onclick="showMarkdown()"><span class="btn-icon">📝</span> Show Markdown</button>
+    <button class="btn-export btn-text" onclick="showJSON()"><span class="btn-icon">{ }</span> Show JSON</button>
+    <button class="btn-export btn-pdf" onclick="exportPDF()"><span class="btn-icon">📄</span> Export PDF</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const QUESTIONS = [
+  { id: "dob", num: 1, section: "Personal Information", title: "Date of Birth", desc: "Used to calculate how much time you have to invest before retirement.", type: "number", placeholder: "Enter your age (years)", unit: "years", explanation: false },
+  { id: "marital_status", num: 2, section: "Personal Information", title: "Marital Status", desc: "Helps determine your household tax situation and joint financial planning.", type: "one_option", options: ["Single","Married","Divorce","Widowed"], explanation: false },
+  { id: "dependents", num: 3, section: "Personal Information", title: "Financial Dependents You Support", desc: "Anyone who relies on your income to cover their daily living expenses, such as children, a spouse, or aging parents.", type: "number", placeholder: "Number of dependents", unit: "people", explanation: true },
+  { id: "health", num: 4, section: "Personal Information", title: "Health", desc: "Select the option that best describes your medical needs and how they impact your finances.", type: "one_option", options: ["Excellent / No Chronic Issues","Managed Condition","Disability / Impairment","High Medical Dependency","Other"], explanation: true },
+  { id: "insurance", num: 5, section: "Protection", title: "Insurance Coverage", desc: "The types of financial protection you already have in place to cover major emergencies.", type: "multi_option", options: ["Life Insurance","Health Insurance","Disability Insurance","Other"], explanation: true },
+  { id: "currency", num: 6, section: "Location & Identity", title: "Base Currency", desc: "The main currency you use for earning, saving, and spending.", type: "currency_select", explanation: true },
+  { id: "country", num: 7, section: "Location & Identity", title: "Country of Residence", desc: "Determines which tax laws, retirement rules, and financial regulations apply to your money.", type: "country_select", explanation: false },
+  { id: "job_type", num: 8, section: "Income", title: "Job Type / Income Source", desc: "What are your primary sources of income? You can select more than one.", type: "multi_option", options: ["Freelance","Business Owner","Employee","Pension","Student","Unemployed","Other"], explanation: true },
+  { id: "liquid_asset", num: 9, section: "Assets & Liabilities", title: "Liquid Assets", desc: "Cash or investments (like stocks) that you can easily access within a few days.", type: "number", placeholder: "Estimated value", unit: "in base currency", explanation: true },
+  { id: "hard_asset", num: 10, section: "Assets & Liabilities", title: "Hard Assets (Price Estimate)", desc: "Physical assets like real estate or vehicles that take time to sell.", type: "number", placeholder: "Estimated value", unit: "in base currency", explanation: true },
+  { id: "liabilities", num: 11, section: "Assets & Liabilities", title: "Liabilities & Interest", desc: "The total amount of debt you currently owe — mortgages, credit cards, loans.", type: "number", placeholder: "Total debt amount", unit: "in base currency", explanation: true },
+  { id: "monthly_earning", num: 12, section: "Cash Flow", title: "Monthly Earning (after tax)", desc: "Your average total income per month after taxes are taken out.", type: "number", placeholder: "Monthly income", unit: "in base currency", explanation: true },
+  { id: "monthly_spending", num: 13, section: "Cash Flow", title: "Monthly Spending", desc: "Your average total living expenses per month — bills, food, lifestyle.", type: "number", placeholder: "Monthly expenses", unit: "in base currency", explanation: true },
+  { id: "time_horizon", num: 14, section: "Investment Profile", title: "Time Horizon", desc: "How many years you plan to leave this money invested before you need to withdraw and spend it.", type: "number", placeholder: "Number of years", unit: "years", explanation: true },
+  { id: "liquidity_needs", num: 15, section: "Investment Profile", title: "Liquidity Needs", desc: "How much of your money you might need to quickly convert back into cash for short-term living expenses or emergencies.", type: "number", placeholder: "Estimated amount needed", unit: "in base currency", explanation: true },
+  { id: "investment_experience", num: 16, section: "Investment Profile", title: "Investment Experience", desc: "Your comfort level and past experience with buying things like stocks, bonds, mutual funds, or real estate.", type: "one_option", options: ["Zero","Passive","Advance"], explanation: true },
+  { id: "money_objective", num: 17, section: "Investment Profile", title: "Money Objective", desc: "Your main goal for your savings.", type: "one_option", options: ["Keeping Safe Against Inflation","Generating a regular monthly income","Aggressively growing its value over time","Other"], explanation: true },
+  { id: "risk_tolerance", num: 18, section: "Investment Profile", title: "Risk Tolerance", desc: "How comfortable you are with the value of your investments dropping temporarily in exchange for potentially higher long-term growth.", type: "one_option", options: ["Low Risk : Low Return","Moderate Risk : Moderate Return","High Risk : High Return"], explanation: true },
+  { id: "life_events", num: 19, section: "Future Planning", title: "Expected Major Life Events (Next 1–5 Years)", desc: "Any upcoming big changes that will require a large amount of cash.", type: "multi_option", options: ["Buying a Home","Having a Child","Marriage","Career Change / Sabbatical","Major Purchase (Car / Business)","None","Other"], explanation: true },
+  { id: "legacy_planning", num: 20, section: "Future Planning", title: "Legacy Planning", desc: "To ensure the money goes to the right people if you pass away, bypassing heavy taxation or legal disputes.", type: "one_option", options: ["Have a Trust (Private Trust)","Have a Will (Last Will and Testament)","No Legacy Plan in place","Other"], explanation: true }
+];
+
+const CURRENCIES = ["AED","AFN","ALL","AMD","ANG","AOA","ARS","AUD","AWG","AZN","BAM","BBD","BDT","BGN","BHD","BIF","BMD","BND","BOB","BRL","BSD","BTN","BWP","BYN","BZD","CAD","CDF","CHF","CLP","CNY","COP","CRC","CUP","CVE","CZK","DJF","DKK","DOP","DZD","EGP","ERN","ETB","EUR","FJD","FKP","FOK","GBP","GEL","GGP","GHS","GIP","GMD","GNF","GTQ","GYD","HKD","HNL","HRK","HTG","HUF","IDR","ILS","IMP","INR","IQD","IRR","ISK","JEP","JMD","JOD","JPY","KES","KGS","KHR","KID","KMF","KRW","KWD","KYD","KZT","LAK","LBP","LKR","LRD","LSL","LYD","MAD","MDL","MGA","MKD","MMK","MNT","MOP","MRU","MUR","MVR","MWK","MXN","MYR","MZN","NAD","NGN","NIO","NOK","NPR","NZD","OMR","PAB","PEN","PGK","PHP","PKR","PLN","PYG","QAR","RON","RSD","RUB","RWF","SAR","SBD","SCR","SDG","SEK","SGD","SHP","SLE","SLL","SOS","SRD","SSP","STN","SYP","SZL","THB","TJS","TMT","TND","TOP","TRY","TTD","TVD","TWD","TZS","UAH","UGX","USD","UYU","UZS","VES","VND","VUV","WST","XAF","XCD","XDR","XOF","XPF","YER","ZAR","ZMW","ZWL"];
+const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea, North","Korea, South","Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+
+const state = {};
+
+function buildForm() {
+  const main = document.getElementById('form-main');
+  let currentSection = null;
+
+  QUESTIONS.forEach(q => {
+    if (q.section !== currentSection) {
+      currentSection = q.section;
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      lbl.textContent = currentSection;
+      main.appendChild(lbl);
+    }
+    main.appendChild(buildCard(q));
+  });
+}
+
+function buildCard(q) {
+  const card = document.createElement('div');
+  card.className = 'q-card'; card.id = 'card-' + q.id;
+
+  const header = document.createElement('div');
+  header.className = 'q-header';
+  header.innerHTML = `<div class="q-label-row"><div class="q-num">${q.num}</div><div class="q-title">${q.title}</div><div class="q-mark">?</div></div>`;
+  card.appendChild(header);
+
+  const descPanel = document.createElement('div');
+  descPanel.className = 'q-desc-panel';
+  descPanel.innerHTML = `<div class="q-desc-text">${q.desc}</div>`;
+  card.appendChild(descPanel);
+
+  const body = document.createElement('div');
+  body.className = 'q-body';
+  body.appendChild(buildInput(q));
+
+  if (q.explanation) {
+    const ew = document.createElement('div');
+    ew.className = 'explanation-wrap';
+    ew.innerHTML = `<div class="explanation-label">✏️ <span>Add your own explanation (optional)</span></div>`;
+    const ta = document.createElement('textarea');
+    ta.className = 'input-expl'; ta.placeholder = 'Add context or notes about your answer…';
+    ta.oninput = () => { state[q.id] = state[q.id] || {}; state[q.id].explanation = ta.value; updateProgress(); };
+    ew.appendChild(ta); body.appendChild(ew);
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+function buildInput(q) {
+  if (q.type === 'number') {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'decimal';
+    inp.className = 'input-num'; inp.placeholder = q.placeholder;
+    inp.style.flex = '1';
+    
+    inp.addEventListener('input', function(e) {
+      let val = this.value.replace(/[^\d,]/g, '');
+      const parts = val.split(',');
+      if (parts.length > 2) val = parts[0] + ',' + parts.slice(1).join('');
+      let intPart = parts[0];
+      if (intPart !== '') {
+          intPart = parseInt(intPart, 10).toString();
+          intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      this.value = parts.length > 1 ? intPart + ',' + parts[1] : intPart;
+      
+      state[q.id] = state[q.id] || {}; state[q.id].value = this.value; updateProgress();
+    });
+    wrap.appendChild(inp);
+    if (q.unit) { const u = document.createElement('span'); u.style.cssText = 'font-size:12px;color:var(--text-muted);white-space:nowrap;'; u.textContent = q.unit; wrap.appendChild(u); }
+    return wrap;
+  }
+
+  if (q.type === 'one_option' || q.type === 'multi_option') {
+    const wrap = document.createElement('div');
+    wrap.className = 'options-wrap';
+    const isMulti = q.type === 'multi_option';
+    q.options.forEach(opt => {
+      const btn = document.createElement('div');
+      btn.className = 'opt-btn';
+      btn.innerHTML = `<div class="${isMulti ? 'opt-sq' : 'opt-dot'}"></div>${opt}`;
+      btn.onclick = () => {
+        if (!isMulti) { wrap.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); }
+        btn.classList.toggle('selected');
+        state[q.id] = state[q.id] || {};
+        if (isMulti) {
+          state[q.id].value = [...wrap.querySelectorAll('.opt-btn.selected')].map(b => b.textContent.trim());
+        } else {
+          state[q.id].value = opt;
+        }
+        updateProgress();
+      };
+      wrap.appendChild(btn);
+    });
+    return wrap;
+  }
+
+  if (q.type === 'currency_select' || q.type === 'country_select') {
+    const wrap = document.createElement('div');
+    const isCurrency = q.type === 'currency_select';
+    
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'input-num';
+    inp.setAttribute('list', isCurrency ? 'dl-currency' : 'dl-country');
+    inp.placeholder = isCurrency ? 'Search currency (e.g. IDR)' : 'Search country (e.g. Indonesia)';
+    inp.onchange = () => { state[q.id] = state[q.id] || {}; state[q.id].value = inp.value; updateProgress(); };
+    
+    if (!document.getElementById('dl-currency') && isCurrency) {
+      const dl = document.createElement('datalist'); dl.id = 'dl-currency';
+      CURRENCIES.forEach(c => { const o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+      document.body.appendChild(dl);
+    }
+    if (!document.getElementById('dl-country') && !isCurrency) {
+      const dl = document.createElement('datalist'); dl.id = 'dl-country';
+      COUNTRIES.forEach(c => { const o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+      document.body.appendChild(dl);
+    }
+
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  return document.createElement('div');
+}
+
+function updateProgress() {
+  let answered = 0;
+  QUESTIONS.forEach(q => {
+    const s = state[q.id];
+    if (!s) return;
+    if (Array.isArray(s.value) && s.value.length > 0) answered++;
+    else if (s.value !== undefined && String(s.value).trim() !== '') answered++;
+  });
+  const pct = Math.round((answered / QUESTIONS.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${answered} of ${QUESTIONS.length} answered`;
+}
+
+function collectData() {
+  return QUESTIONS.map(q => {
+    const s = state[q.id] || {};
+    return {
+      id: q.id, num: q.num, section: q.section,
+      question: q.title,
+      answer: s.value !== undefined ? s.value : '',
+      explanation: s.explanation || ''
+    };
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function renderOutput(text) {
+  document.getElementById('resultText').textContent = text;
+  const box = document.getElementById('outputBox');
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function showJSON() {
+  const data = collectData();
+  renderOutput(JSON.stringify({ financial_profile: data }, null, 2));
+  showToast('JSON Generated Below');
+}
+
+function showMarkdown() {
+  const data = collectData();
+  let md = '| Question | Answer | Notes |\n|---|---|---|\n';
+  data.forEach(q => {
+    const ans = Array.isArray(q.answer) ? q.answer.join(', ') : (q.answer || '—');
+    const notes = q.explanation ? q.explanation.replace(/\n/g, ' ') : '';
+    md += `| **${q.question}** | ${ans} | ${notes} |\n`;
+  });
+  renderOutput(md);
+  showToast('Markdown Generated Below');
+}
+
+function copyOutput() {
+  const text = document.getElementById('resultText').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to Clipboard!'));
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const data = collectData();
+  const margin = 20, pageW = 210, contentW = pageW - margin * 2;
+  let y = 20;
+
+  doc.setFillColor(92, 74, 42); doc.rect(0, 0, pageW, 35, 'F');
+  doc.setTextColor(250, 248, 243); doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+  doc.text('Personal Financial Questionnaire', margin, 18);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text(`Exported: ${new Date().toLocaleString()}`, margin, 27);
+  doc.text('Data is private – not stored or shared', pageW - margin, 27, { align: 'right' });
+  y = 46;
+
+  let currentSection = '';
+  data.forEach(q => {
+    if (y > 265) { doc.addPage(); y = 20; }
+    if (q.section !== currentSection) {
+      currentSection = q.section;
+      if (y > 20) y += 4;
+      doc.setFillColor(237, 233, 222); doc.rect(margin, y - 4, contentW, 9, 'F');
+      doc.setTextColor(92, 74, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+      doc.text(currentSection.toUpperCase(), margin + 3, y + 2); y += 12;
+    }
+    const ans = Array.isArray(q.answer) ? q.answer.join(', ') : (q.answer || '—');
+    doc.setTextColor(44, 36, 22); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text(`${q.num}. ${q.question}`, margin, y); y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 90, 70);
+    const lines = doc.splitTextToSize(ans || '(not answered)', contentW - 5);
+    lines.forEach(l => { if (y > 275) { doc.addPage(); y = 20; } doc.text(l, margin + 4, y); y += 5; });
+    if (q.explanation && q.explanation.trim()) {
+      doc.setFontSize(9); doc.setTextColor(130, 110, 80); doc.setFont('helvetica', 'italic');
+      const expLines = doc.splitTextToSize('Note: ' + q.explanation, contentW - 10);
+      expLines.forEach(l => { if (y > 275) { doc.addPage(); y = 20; } doc.text(l, margin + 6, y); y += 4.5; });
+    }
+    y += 4; doc.setDrawColor(213, 207, 191); doc.line(margin, y - 2, margin + contentW, y - 2);
+  });
+  doc.save('financial_profile.pdf'); showToast('PDF exported');
+}
+
+buildForm();
+</script>
+</body>
+</html>
